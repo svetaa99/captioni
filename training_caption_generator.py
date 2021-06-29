@@ -36,9 +36,8 @@ def all_img_captions(filename):
         img_source = tokens[0]
         if img_num == 0:
             captions[img_source] = []
-        else:
-            img_description = tokens[1].split("\t")[1]
-            captions[img_source].append(img_description)
+        img_description = tokens[1].split("\t")[1]
+        captions[img_source].append(img_description)
 
     return captions
 
@@ -75,14 +74,15 @@ def create_text_vocabulary(captions):
     return text_vocabulary
 
 
-def save_descriptions(captions):
-    f = open("descriptions.txt", "a")
-    for k, v in captions.items():
-        for value in v:
-            line = k + "\t" + value + "\n"
-            f.write(line)
-
-    f.close()
+def save_descriptions(descriptions):
+    lines = list()
+    for key, desc_list in descriptions.items():
+        for desc in desc_list:
+            lines.append(key + '\t' + desc)
+    data = "\n".join(lines)
+    file = open("descriptions.txt", "w")
+    file.write(data)
+    file.close()
 
 
 def extract_features(directory):
@@ -124,7 +124,7 @@ def load_clean_description(filename, photos):
             if image not in descriptions:
                 descriptions[image] = []
             desc = "<start>" + " ".join(image_caption) + "<end>"
-            descriptions[image] = desc
+            descriptions[image].append(desc)
 
     return descriptions
 
@@ -136,17 +136,38 @@ def load_features(photos):
     return features
 
 
+def dict_to_list(descriptions):
+    all_desc = []
+    for key in descriptions.keys():
+        [all_desc.append(desc) for desc in descriptions[key]]
+
+    return all_desc
+
+
+def create_tokenizer(descriptions):
+    desc_list = dict_to_list(descriptions)
+    tokenizer = Tokenizer()
+    tokenizer.fit_on_texts(desc_list)
+
+    return tokenizer
+
+
+def calculate_max_length(descriptions):
+    desc_list = dict_to_list(descriptions)
+
+    return max(len(d.split()) for d in desc_list)
+
 if __name__ == "__main__":
     # CREATING DESCRIPTION.TXT AND CLEANING TOKEN.TXT FILE
 
-    # tokens_file = dataset_text + "/" + "Flickr8k.token"
-    #
-    # captions = all_img_captions(tokens_file)
-    # captions = clean_text(captions)
-    #
-    # vocabulary = create_text_vocabulary(captions)
-    #
-    # save_descriptions(captions)
+    tokens_file = dataset_text + "/" + "Flickr8k.token.txt"
+
+    captions = all_img_captions(tokens_file)
+    captions = clean_text(captions)
+
+    vocabulary = create_text_vocabulary(captions)
+
+    save_descriptions(captions)
 
     # EXTRACTING FEATURES WITH XCEPTION MODEL
 
@@ -159,3 +180,13 @@ if __name__ == "__main__":
     train_imgs = load_photos(filename)
     train_descriptions = load_clean_description("descriptions.txt", train_imgs)
     train_features = load_features(train_imgs)
+
+    # CREATING TOKENIZER.P FILE WITH TOKENIZED INDEXED FROM WORDS IN DESCRIPTIONS
+
+    tokenizer = create_tokenizer(train_descriptions)
+    dump(tokenizer, open("tokenizer.p", "wb"))
+    vocab_size = len(tokenizer.word_index) + 1
+    print(vocab_size)
+
+    max_lengt = calculate_max_length(train_descriptions)
+    print(max_lengt)
