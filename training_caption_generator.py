@@ -32,7 +32,7 @@ def all_img_captions(filename):
     captions = {}
     for line in f.split("\n"):
         tokens = line.split("#")
-        img_num = int(tokens[1][0])      # first element after # in line
+        img_num = int(tokens[1][0])  # first element after # in line
         img_source = tokens[0]
         if img_num == 0:
             captions[img_source] = []
@@ -86,7 +86,8 @@ def save_descriptions(captions):
 
 
 def extract_features(directory):
-    model = Xception(include_top=False, pooling='avg')  # removing last layer from the net
+    # removing last layer from the net because there is no need to classify the object, but only to get the vector
+    model = Xception(include_top=False, pooling='avg')
     features = {}
     for img in tqdm(os.listdir(directory)):
         filename = directory + "/" + img
@@ -94,7 +95,7 @@ def extract_features(directory):
         image = image.resize((299, 299))
         image = np.expand_dims(image, axis=0)
         image = preprocess_input(image)
-        image = image/127.5
+        image = image / 127.5
         image = image - 1.0
 
         feature = model.predict(image)
@@ -102,7 +103,42 @@ def extract_features(directory):
     return features
 
 
+def load_photos(filename):
+    text = load_doc(filename)
+    photos = text.split("\n")[:-1]
+
+    return photos
+
+
+def load_clean_description(filename, photos):
+    file = load_doc(filename)
+    descriptions = {}
+    for line in file.split("\n"):
+        words = line.split()
+        if len(words) < 1:
+            continue
+
+        image, image_caption = words[0], words[1:]
+
+        if image in photos:
+            if image not in descriptions:
+                descriptions[image] = []
+            desc = "<start>" + " ".join(image_caption) + "<end>"
+            descriptions[image] = desc
+
+    return descriptions
+
+
+def load_features(photos):
+    all_features = load(open("features.p", "rb"))
+    features = {k: all_features[k] for k in photos}
+
+    return features
+
+
 if __name__ == "__main__":
+    # CREATING DESCRIPTION.TXT AND CLEANING TOKEN.TXT FILE
+
     # tokens_file = dataset_text + "/" + "Flickr8k.token"
     #
     # captions = all_img_captions(tokens_file)
@@ -112,5 +148,14 @@ if __name__ == "__main__":
     #
     # save_descriptions(captions)
 
-    features = extract_features(dataset_images)
-    dump(features, open("features.p", "wb"))
+    # EXTRACTING FEATURES WITH XCEPTION MODEL
+
+    # features = extract_features(dataset_images)
+    # dump(features, open("features.p", "wb"))
+
+    # LOADING TRAINING DATASET
+
+    filename = dataset_text + "/" + "Flickr_8k.trainImages.txt"
+    train_imgs = load_photos(filename)
+    train_descriptions = load_clean_description("descriptions.txt", train_imgs)
+    train_features = load_features(train_imgs)
