@@ -123,7 +123,7 @@ def load_clean_description(filename, photos):
         if image in photos:
             if image not in descriptions:
                 descriptions[image] = []
-            desc = "<start>" + " ".join(image_caption) + "<end>"
+            desc = "<start> " + " ".join(image_caption) + " <end>"
             descriptions[image].append(desc)
 
     return descriptions
@@ -157,6 +157,7 @@ def calculate_max_length(descriptions):
 
     return max(len(d.split()) for d in desc_list)
 
+
 if __name__ == "__main__":
     # CREATING DESCRIPTION.TXT AND CLEANING TOKEN.TXT FILE
 
@@ -186,7 +187,5 @@ if __name__ == "__main__":
     tokenizer = create_tokenizer(train_descriptions)
     dump(tokenizer, open("tokenizer.p", "wb"))
     vocab_size = len(tokenizer.word_index) + 1
-    print(vocab_size)
 
     max_lengt = calculate_max_length(train_descriptions)
-    print(max_lengt)
