@@ -13,10 +13,10 @@ from tensorflow.keras.layers import add
 from tensorflow.keras.models import Model, load_model
 from tensorflow.keras.layers import Input, Dense, LSTM, Embedding, Dropout
 
-from tqdm import tqdm_notebook as tqdm
+from tqdm import tqdm
 
 dataset_text = "C:\\Users\\Lenovo\\Documents\\Faks\\3_Godina\\6_Semestar\\ORI\\Captioni\\Flickr8k_text"
-dataset_images = "C:\\Users\\Lenovo\\Documents\\Faks\\3_Godina\\6_Semestar\\ORI\\Captioni\\Flickr8k_Dataset"
+dataset_images = "C:\\Users\\Lenovo\\Documents\\Faks\\3_Godina\\6_Semestar\\ORI\\Captioni\\Flickr8k_Dataset\\Flicker8k_Dataset"
 
 
 def load_doc(filename):
@@ -85,12 +85,32 @@ def save_descriptions(captions):
     f.close()
 
 
+def extract_features(directory):
+    model = Xception(include_top=False, pooling='avg')  # removing last layer from the net
+    features = {}
+    for img in tqdm(os.listdir(directory)):
+        filename = directory + "/" + img
+        image = Image.open(filename)
+        image = image.resize((299, 299))
+        image = np.expand_dims(image, axis=0)
+        image = preprocess_input(image)
+        image = image/127.5
+        image = image - 1.0
+
+        feature = model.predict(image)
+        features[img] = feature
+    return features
+
+
 if __name__ == "__main__":
-    tokens_file = dataset_text + "/" + "Flickr8k.token"
+    # tokens_file = dataset_text + "/" + "Flickr8k.token"
+    #
+    # captions = all_img_captions(tokens_file)
+    # captions = clean_text(captions)
+    #
+    # vocabulary = create_text_vocabulary(captions)
+    #
+    # save_descriptions(captions)
 
-    captions = all_img_captions(tokens_file)
-    captions = clean_text(captions)
-
-    vocabulary = create_text_vocabulary(captions)
-
-    save_descriptions(captions)
+    features = extract_features(dataset_images)
+    dump(features, open("features.p", "wb"))
