@@ -8,7 +8,7 @@ from tensorflow.keras.applications.xception import Xception, preprocess_input
 from tensorflow.keras.preprocessing.image import load_img, img_to_array
 from tensorflow.keras.preprocessing.text import Tokenizer
 from tensorflow.keras.preprocessing.sequence import pad_sequences
-from tensorflow.keras.utils import to_categorical
+from tensorflow.keras.utils import to_categorical, plot_model
 from tensorflow.keras.layers import add
 from tensorflow.keras.models import Model, load_model
 from tensorflow.keras.layers import Input, Dense, LSTM, Embedding, Dropout
@@ -185,6 +185,32 @@ def create_sequences(tokenizer, max_length, desc_list, feature):
             y.append(out_seq)
     return np.array(X1), np.array(X2), np.array(y)
 
+
+def define_model(vocab_size, max_length):
+    # features inputs
+    inputs1 = Input(shape=(2048,))
+    fe1 = Dropout(0.5)(inputs1)
+    fe2 = Dense(256, activation='relu')(fe1)
+
+    # sequence inputs
+    inputs2 = Input(shape=(max_length,))
+    se1 = Embedding(vocab_size, 256, mask_zero=True)(inputs2)
+    se2 = Dropout(0.5)(se1)
+    se3 = LSTM(256)(se2)
+
+    # merge models
+    decoder1 = add([fe2, se3])
+    decoder2 = Dense(256, activation='relu')(decoder1)
+    outputs = Dense(vocab_size, activation='softmax')(decoder2)
+
+    model = Model(inputs=[inputs1, inputs2], outputs=outputs)
+    model.compile(loss='categorical_crossentropy', optimizer='adam')
+
+    print(model.summary())
+
+    return model
+
+
 if __name__ == "__main__":
     # CREATING DESCRIPTION.TXT AND CLEANING TOKEN.TXT FILE
 
@@ -218,7 +244,4 @@ if __name__ == "__main__":
 
     max_length = calculate_max_length(descriptions)
 
-    # DATA GENERATOR
-
-    [a, b], c = next(data_generator(train_descriptions, features, tokenizer, max_length))
-
+    define_model(vocab_size, max_length)
