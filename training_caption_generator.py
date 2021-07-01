@@ -164,7 +164,7 @@ def data_generator(descriptions, features, tokenizer, max_length):
             feature = features[key][0]
             input_image, input_sequence, output_word = create_sequences(tokenizer, max_length, description_list, feature)
 
-            yield [[input_image, input_sequence], output_word]
+            yield ([input_image, input_sequence], output_word)
 
 
 def create_sequences(tokenizer, max_length, desc_list, feature):
@@ -244,4 +244,18 @@ if __name__ == "__main__":
 
     max_length = calculate_max_length(descriptions)
 
-    define_model(vocab_size, max_length)
+    # TRAINING THE MODEL
+
+    print('Dataset: ', len(train_imgs))
+    print('Descriptions: train=', len(train_descriptions))
+    print('Photos: train=', len(train_features))
+    print('Vocabulary size: ', vocab_size)
+    print('Description max length: ', max_length)
+
+    model = define_model(vocab_size, max_length)
+    epochs = 10
+    steps = len(train_descriptions)
+    for i in tqdm(range(epochs)):
+        generator = data_generator(train_descriptions, train_features, tokenizer, max_length)
+        model.fit(generator, epochs=1, steps_per_epoch=steps, verbose=1)
+        model.save("models/model_" + str(i) + ".h5")
