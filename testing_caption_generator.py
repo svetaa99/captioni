@@ -7,11 +7,11 @@ import argparse
 from tensorflow.keras.preprocessing.sequence import pad_sequences
 from tensorflow.keras.models import load_model
 from tensorflow.keras.applications.xception import Xception, preprocess_input
-
-ap = argparse.ArgumentParser()
-ap.add_argument('-i', '--image', required=True, help="Image path")
-args = vars(ap.parse_args())
-img_path = args['image']
+#
+# ap = argparse.ArgumentParser()
+# ap.add_argument('-i', '--image', required=True, help="Image path")
+# args = vars(ap.parse_args())
+# img_path = args['image']
 
 
 def extract_features(filename, model):
@@ -57,20 +57,18 @@ def generate_desc(model, tokenizer, photo, max_length):
     return in_text
 
 
-if __name__ == '__main__':
+def generate_caption(img_url):
     max_length = 32
     root_path = "C:\\Users\\Lenovo\\Documents\\Faks\\3_Godina\\6_Semestar\\ORI\\Captioni\\Flickr8k_Dataset\\Flicker8k_Dataset"
-    img_url = "113678030_87a6a6e42e" + ".jpg"
     path = root_path + "\\" + img_url
     tokenizer = load(open("tokenizer.p", "rb"))
-    model = load_model('models/model_10.h5')
+    model = load_model('models/model_8.h5')
     xception_model = Xception(include_top=False, pooling='avg')
 
-    photo = extract_features(img_path, xception_model)
-    img = Image.open(img_path)
-
+    photo = extract_features(path, xception_model)
     description = generate_desc(model, tokenizer, photo, max_length)
+
     print("\n\n")
     print(description)
-    plt.imshow(img)
-    plt.show()
+
+    return description
