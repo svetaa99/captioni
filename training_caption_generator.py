@@ -4,6 +4,7 @@ from PIL import Image
 import os
 from pickle import dump, load
 
+from keras.callbacks import ModelCheckpoint
 from tensorflow.keras.applications.xception import Xception, preprocess_input
 from tensorflow.keras.preprocessing.image import load_img, img_to_array
 from tensorflow.keras.preprocessing.text import Tokenizer
@@ -255,6 +256,7 @@ if __name__ == "__main__":
     model = define_model(vocab_size, max_length)
     epochs = 10
     steps = len(train_descriptions)
+
     for i in tqdm(range(epochs)):
         generator = data_generator(train_descriptions, train_features, tokenizer, max_length)
         model.fit(generator, epochs=1, steps_per_epoch=steps, verbose=1)
