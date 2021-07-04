@@ -7,11 +7,11 @@ import argparse
 from tensorflow.keras.preprocessing.sequence import pad_sequences
 from tensorflow.keras.models import load_model
 from tensorflow.keras.applications.xception import Xception, preprocess_input
-#
-# ap = argparse.ArgumentParser()
-# ap.add_argument('-i', '--image', required=True, help="Image path")
-# args = vars(ap.parse_args())
-# img_path = args['image']
+
+ap = argparse.ArgumentParser()
+ap.add_argument('-i', '--image', required=True, help="Image path")
+args = vars(ap.parse_args())
+img_path = args['image']
 
 
 def extract_features(filename, model):
@@ -72,3 +72,15 @@ def generate_caption(img_url):
     print(description)
 
     return description
+
+if __name__ == "__main__":
+  max_length = 32
+  tokenizer = load(open("tokenizer.p", "rb"))
+  model = load_model('models/model_8.h5')
+  xception_model = Xception(include_top=False, pooling='avg')
+
+  photo = extract_features(img_path, xception_model)
+  description = generate_desc(model, tokenizer, photo, max_length)
+
+  print("\n\n")
+  print(description)
